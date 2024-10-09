@@ -1,5 +1,5 @@
 import ttkbootstrap as ttk # type: ignore
-from DynamicProxy import DynamicProxy
+from database.DynamicProxy import DynamicProxy
 from dataclasses import dataclass
 
 # Step 1: Define your classes
