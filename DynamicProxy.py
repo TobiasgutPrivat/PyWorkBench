@@ -67,3 +67,8 @@ class DynamicProxy:
     def __call__(self, *args, **kwargs):
         self._load()  # If the object is callable (has a __call__ method), call it
         return self._obj(*args, **kwargs)
+    
+    def __repr__(self):
+        # Use the __dict__ to dynamically capture all attributes and their values
+        attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
+        return f"{self.__class__.__name__}({attrs})"
