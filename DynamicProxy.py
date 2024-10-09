@@ -1,14 +1,10 @@
 import pickle
-from ProxyDict import ProxyDict
-from ProxyList import ProxyList
-from ProxySet import ProxySet
 
 #sideeffects:
 # - when a object is loaded on diffrent machines at the same time, it can have async data
 
 #TODO switch to qdrant
 class DynamicProxy:
-    _id: int # take from qdrant
     _name: str
     _cls: type
     _obj: object
@@ -21,13 +17,12 @@ class DynamicProxy:
         :param cls: If creating a new object, this is the class of the object.
         :param args, kwargs: Arguments for the class constructor if creating a new object.
         """
-        self.id = id(self)
-        self._name = name # (Optional) 
+        self._name = name
         self._cls = cls  # The class type for creating new instances
         self._obj = obj  # Track if an object is passed or not
         self._loaded = bool(obj)  # Loaded if obj is passed
 
-        # ways of creating a Proxy should be available
+        #TODO think about which ways of creating a Proxy should be available
         # 1. create new from an object (also proxy subobjects)
         # 2. create new of specific class (include args for creation)
         # 3. when serialized it creates from id/file_path and class (no implementation needed)
@@ -35,8 +30,6 @@ class DynamicProxy:
         if not self._loaded and cls is not None:
             self._obj = self._cls(*args, **kwargs)  # Create new instance
             self._loaded = True
-        # else: #TODO Proxyfy subobjects
-        
 
     def _load(self):
         """Loads the object from disk."""
@@ -68,10 +61,14 @@ class DynamicProxy:
         else:
             self._load()  # Load the object before setting any attributes
             
-            
+            if isinstance(value, object) and not isinstance(value, (int, float, str, bool, bytes, list, dict, set)):
+                subobject_path = f"{self._name}.{name}"
+                value = DynamicProxy(subobject_path, obj=value)  # Wrap the new object
 
             setattr(self._obj, name, value)
             self._save()  # Automatically save after modifying
+
+    #TODO handle list, dict, set
 
     def __call__(self, *args, **kwargs):
         self._load()  # If the object is callable (has a __call__ method), call it
@@ -86,15 +83,3 @@ class DynamicProxy:
         return f"{self.__class__.__name__}({attrs})"
     
     #TODO delete
-
-def wrap_subobject(value):
-    if type(value) == list:
-        return ProxyList(value)
-    elif type(value) == dict:
-        return ProxyDict(value)
-    elif type(value) == set:
-        return ProxySet(value)
-    elif type(value) == object:
-        return DynamicProxy(obj=value)
-    else:
-        return value
