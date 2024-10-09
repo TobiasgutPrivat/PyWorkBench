@@ -1,7 +1,14 @@
 import pickle
 import os
+from dataclasses import dataclass
 
+@dataclass
 class DynamicProxy:
+    _file_path: str
+    _cls: type
+    _obj: object
+    _loaded: bool
+
     def __init__(self, file_path, obj=None, cls=None, *args, **kwargs):
         """
         :param file_path: The path where the object will be serialized.
@@ -60,9 +67,3 @@ class DynamicProxy:
     def __call__(self, *args, **kwargs):
         self._load()  # If the object is callable (has a __call__ method), call it
         return self._obj(*args, **kwargs)
-    
-    def __str__(self):
-        return f"{type(self._obj).__name__}({self._obj})"
-    
-    def __repr__(self):
-        return f"DynamicProxy(file_path:{self._file_path}, loaded:{self._loaded}, obj({type(self._obj).__name__}({self._obj})))"
