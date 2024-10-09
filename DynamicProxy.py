@@ -1,9 +1,10 @@
 import pickle
 import os
-from dataclasses import dataclass
+
+#sideeffects:
+# - when a object is loaded on diffrent machines at the same time, it can have async data
 
 #TODO switch to qdrant
-@dataclass
 class DynamicProxy:
     _file_path: str
     _cls: type
@@ -25,7 +26,7 @@ class DynamicProxy:
         #TODO think about which ways of creating a Proxy should be available
         # 1. create new from an object (also proxy subobjects)
         # 2. create new of specific class (include args for creation)
-        # 3. when serialized it creates from id/file_path and class
+        # 3. when serialized it creates from id/file_path and class (no implementation needed)
 
         if not self._loaded and os.path.exists(self._file_path):
             self._load()  # Load from disk if it exists
@@ -45,8 +46,8 @@ class DynamicProxy:
         #TODO save subproxy objects first
         with open(self._file_path, 'wb') as f:
             pickle.dump(self._obj, f)
-        self._loaded = False  # Optionally unload after saving
-        #TODO clear object after saving, to not get serialized
+        self._loaded = False  # (Optionall) unload after saving
+        self._obj = None
 
     def __getattr__(self, name):
         if name in ['_file_path', '_cls', '_obj', '_loaded']:
@@ -76,7 +77,12 @@ class DynamicProxy:
         self._load()  # If the object is callable (has a __call__ method), call it
         return self._obj(*args, **kwargs)
     
+    def __str__(self):
+        return f"<{self._obj.__class__.__name__}>{self._obj}"
+    
     def __repr__(self):
         # Use the __dict__ to dynamically capture all attributes and their values
         attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
         return f"{self.__class__.__name__}({attrs})"
+    
+    #TODO delete

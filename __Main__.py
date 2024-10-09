@@ -34,11 +34,4 @@ parent_proxy = DynamicProxy('parent_object.pkl', obj=parent)
 
 # Step 2: Add a new subobject (it will be automatically wrapped and tracked)
 parent_proxy.new_attr = SubObject(100)
-
-# Access and modify the new attribute
-print(parent_proxy.new_attr.sub_val)  # Output: 100
-
-# Change the value (it will be saved automatically)
-parent_proxy.new_attr.sub_val = 200
-
-print(parent_proxy.new_attr.sub_val)  # Output: 100
+print(parent_proxy.__repr__())
