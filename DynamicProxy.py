@@ -2,6 +2,7 @@ import pickle
 import os
 from dataclasses import dataclass
 
+#TODO switch to qdrant
 @dataclass
 class DynamicProxy:
     _file_path: str
@@ -21,6 +22,11 @@ class DynamicProxy:
         self._obj = obj  # Track if an object is passed or not
         self._loaded = bool(obj)  # Loaded if obj is passed
 
+        #TODO think about which ways of creating a Proxy should be available
+        # 1. create new from an object (also proxy subobjects)
+        # 2. create new of specific class (include args for creation)
+        # 3. when serialized it creates from id/file_path and class
+
         if not self._loaded and os.path.exists(self._file_path):
             self._load()  # Load from disk if it exists
         elif not self._loaded and cls is not None:
@@ -36,9 +42,11 @@ class DynamicProxy:
 
     def _save(self):
         """Saves the object to disk."""
+        #TODO save subproxy objects first
         with open(self._file_path, 'wb') as f:
             pickle.dump(self._obj, f)
         self._loaded = False  # Optionally unload after saving
+        #TODO clear object after saving, to not get serialized
 
     def __getattr__(self, name):
         if name in ['_file_path', '_cls', '_obj', '_loaded']:
