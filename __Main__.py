@@ -30,8 +30,18 @@ class ParentObject:
 
 # Step 1: Create and wrap the parent object
 parent = ParentObject(10)
-parent_proxy = DynamicProxy('parent_object.pkl', obj=parent)
+parent_proxy = DynamicProxy('parent_object', obj=parent)
 
 # Step 2: Add a new subobject (it will be automatically wrapped and tracked)
+
 parent_proxy.new_attr = SubObject(100)
+print("saved:")
+print(parent_proxy.__repr__())
+print("")
+print("get: ", parent_proxy.new_attr.sub_val)
+print("loaded")
+print(parent_proxy.__repr__())
+parent_proxy._save()
+print("")
+print("saved")
 print(parent_proxy.__repr__())
