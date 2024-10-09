@@ -45,3 +45,18 @@ parent_proxy._save()
 print("")
 print("saved")
 print(parent_proxy.__repr__())
+
+# Example usage
+my_list = [1, 2, 3]
+my_proxy = DynamicProxy("my_list", my_list)
+
+# Accessing an element
+print(my_proxy[0])  # This will trigger loading if not already loaded
+
+# Modifying the collection
+my_proxy[1] = 5  # This will also trigger loading and save the updated state
+
+print(my_proxy)
+# Saving the collection
+my_proxy._save()  # Save the current state to disk
+

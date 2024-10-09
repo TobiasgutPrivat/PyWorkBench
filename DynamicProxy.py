@@ -74,6 +74,20 @@ class DynamicProxy:
             delattr(self._obj, name)
             self._save()
 
+    def __getitem__(self, key):
+        self._load()  # Load the object when an item is accessed
+        return self._obj[key]
+
+    def __setitem__(self, key, value):
+        self._load()  # Load the object before setting any item
+        self._obj[key] = wrap_subobject(value)
+        self._save()  # Automatically save after modifying
+
+    def __delitem__(self, key):
+        self._load()  # Load the object before deleting an item
+        del self._obj[key]
+        self._save()
+
     def __call__(self, *args, **kwargs):
         self._load()  # If the object is callable (has a __call__ method), call it
         return self._obj(*args, **kwargs)
