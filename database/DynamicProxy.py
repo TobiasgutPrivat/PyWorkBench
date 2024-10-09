@@ -21,6 +21,7 @@ class DynamicProxy:
         :param cls: If creating a new object, this is the class of the object.
         :param args, kwargs: Arguments for the class constructor if creating a new object.
         """
+        self.id = id(self)
         self._name = name # (Optional) 
         self._cls = cls  # The class type for creating new instances
         self._obj = obj  # Track if an object is passed or not
@@ -52,8 +53,6 @@ class DynamicProxy:
         self._loaded = False  # (Optionall) unload after saving
         self._obj = None
 
-    #def _wrap_subobject(self, value, name): #TODO proxyfy subobject
-
     def __getattr__(self, name):
         if name in ['_name', '_cls', '_obj', '_loaded']:
             # Handle proxy attributes separately
@@ -69,10 +68,7 @@ class DynamicProxy:
         else:
             self._load()  # Load the object before setting any attributes
             
-            if isinstance(value, object) and not isinstance(value, (int, float, str, bool, bytes, list, dict, set)):
-                subobject_path = f"{self._name}.{name}"
-                value = DynamicProxy(subobject_path, obj=value)  # Wrap the new object
-                #TODO proxyfy subobject
+            
 
             setattr(self._obj, name, value)
             self._save()  # Automatically save after modifying
@@ -90,3 +86,15 @@ class DynamicProxy:
         return f"{self.__class__.__name__}({attrs})"
     
     #TODO delete
+
+def wrap_subobject(value):
+    if type(value) == list:
+        return ProxyList(value)
+    elif type(value) == dict:
+        return ProxyDict(value)
+    elif type(value) == set:
+        return ProxySet(value)
+    elif type(value) == object:
+        return DynamicProxy(obj=value)
+    else:
+        return value

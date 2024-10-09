@@ -1,16 +1,13 @@
+from DynamicProxy import wrap_subobject
 class ProxySet(set):
-    def __init__(self, wrapped_set, proxy):
-        super().__init__(wrapped_set)
-        self.proxy = proxy
+    def __init__(self, original_set):
+        super().__init__(original_set)
 
     def add(self, item):
-        if isinstance(item, object) and not isinstance(item, (int, float, str, bool, bytes, list, dict, set)):
-            item = self.proxy._wrap_subobject(item, 'set_item')
-        super().add(item)
-        self.proxy._save()  # Save the modified set
+        super().add(wrap_subobject(item))
 
-    def remove(self, item):
-        super().remove(item)
-        self.proxy._save()
+    # def remove(self, item):#TODO maybe change to delete in database
+    #     super().remove(item)
+    #     self.proxy._save()
 
     # Add other set operations similarly...
