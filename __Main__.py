@@ -29,34 +29,37 @@ class ParentObject:
         return f"{self.__class__.__name__}({attrs})"
 
 # Step 1: Create and wrap the parent object
-parent = ParentObject(10)
-parent_proxy = DynamicProxy('parent_object', obj=parent)
+# parent = ParentObject(10)
+# parent_proxy = DynamicProxy(parent)
 
-# Step 2: Add a new subobject (it will be automatically wrapped and tracked)
+# # Step 2: Add a new subobject (it will be automatically wrapped and tracked)
 
-parent_proxy.new_attr = SubObject(100)
-print("saved:")
-print(parent_proxy.__repr__())
-print("")
-print("get: ", parent_proxy.new_attr.sub_val)
-print("loaded")
-print(parent_proxy.__repr__())
-parent_proxy._save()
-print("")
-print("saved")
-print(parent_proxy.__repr__())
+# parent_proxy.new_attr = SubObject(100)
+# print("saved:")
+# print(parent_proxy.__repr__())
+# print("")
+# print("get: ", parent_proxy.new_attr.sub_val)
+# print("loaded")
+# print(parent_proxy.__repr__())
+# parent_proxy._save()
+# print("")
+# print("saved")
+# print(parent_proxy.__repr__())
 
-# Example usage
-my_list = [1, 2, 3]
-my_proxy = DynamicProxy("my_list", my_list)
+# # Example usage
+# my_list = [1, 2, 3]
+# my_proxy = DynamicProxy(my_list)
 
-# Accessing an element
-print(my_proxy[0])  # This will trigger loading if not already loaded
+# # Accessing an element
+# print(my_proxy[0])  # This will trigger loading if not already loaded
 
-# Modifying the collection
-my_proxy[1] = 5  # This will also trigger loading and save the updated state
+# # Modifying the collection
+# my_proxy[1] = 5  # This will also trigger loading and save the updated state
 
-print(my_proxy)
-# Saving the collection
-my_proxy._save()  # Save the current state to disk
+# print(my_proxy)
+# # Saving the collection
+# my_proxy._save()  # Save the current state to disk
 
+
+from QDrantDB import createNewObject, getObject
+print(createNewObject([1,0]))
