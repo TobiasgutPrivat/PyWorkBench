@@ -1,4 +1,5 @@
 import ttkbootstrap as ttk # type: ignore
+from json import dumps
 from DynamicProxy import DynamicProxy
 from dataclasses import dataclass
 
@@ -61,5 +62,5 @@ class ParentObject:
 # my_proxy._save()  # Save the current state to disk
 
 
-from QDrantDB import createNewObject, getObject
-print(createNewObject([1,0]))
+from WeaviateDB import is_live
+print(is_live())
