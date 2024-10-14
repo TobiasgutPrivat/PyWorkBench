@@ -62,5 +62,7 @@ class ParentObject:
 # my_proxy._save()  # Save the current state to disk
 
 
-from WeaviateDB import is_live
-print(is_live())
+from MongoDB import createNewObject, getObject
+id = createNewObject({"test": "asd"})
+print(id)
+print(getObject(id))

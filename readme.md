@@ -1,7 +1,2 @@
-## qdrant docker
-docker run -p 6333:6333 qdrant/qdrant
-
--> http://localhost:6333/dashboard
-
-## weaviate
-http://localhost:8080/
+## MongoDB
+currently: local -> mongodb://localhost:27017/, with mongoDB compass
