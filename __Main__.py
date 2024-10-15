@@ -29,23 +29,27 @@ class ParentObject:
         attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
         return f"{self.__class__.__name__}({attrs})"
 
-# Step 1: Create and wrap the parent object
-parent = ParentObject(10)
-parent_proxy = DynamicProxy(parent)
+test = {"test": "test",
+        "list": [1, 2, 3],
+        "dict": {"key1": "value1", "key2": "value2"}}
 
-# Step 2: Add a new subobject (it will be automatically wrapped and tracked)
+# # Step 1: Create and wrap the parent object
+# parent = ParentObject(10)
+# parent_proxy = DynamicProxy(parent)
 
-parent_proxy.new_attr = SubObject(100)
-print("saved:")
-print(parent_proxy.__repr__())
-print("")
-print("get: ", parent_proxy.new_attr.sub_val)
-print("loaded")
-print(parent_proxy.__repr__())
-parent_proxy._save()
-print("")
-print("saved")
-print(parent_proxy.__repr__())
+# # Step 2: Add a new subobject (it will be automatically wrapped and tracked)
+
+# parent_proxy.new_attr = SubObject(100)
+# print("saved:")
+# print(parent_proxy.__repr__())
+# print("")
+# print("get: ", parent_proxy.new_attr.sub_val)
+# print("loaded")
+# print(parent_proxy.__repr__())
+# parent_proxy._save()
+# print("")
+# print("saved")
+# print(parent_proxy.__repr__())
 
 # # Example usage
 # my_list = [1, 2, 3]

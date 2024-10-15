@@ -38,7 +38,7 @@ class DynamicProxy:
         return getattr(self._obj, name)
 
     def __setattr__(self, name, value):
-        if name in ['_id', '_cls', '_obj', '_loaded']:
+        if name in ['_id', '_type', '_obj', '_loaded']:
             super().__setattr__(name, value)
         else:
             self._load()
@@ -46,7 +46,7 @@ class DynamicProxy:
             self._save()  # Automatically save after modifying
 
     def __delattr__(self, name):
-        if name in ['_id', '_cls', '_obj', '_loaded']:
+        if name in ['_id', '_type', '_obj', '_loaded']:
             super().__delattr__(name)
         else:
             self._load()  # Load the object before deleting any attributes
