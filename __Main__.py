@@ -30,22 +30,22 @@ class ParentObject:
         return f"{self.__class__.__name__}({attrs})"
 
 # Step 1: Create and wrap the parent object
-# parent = ParentObject(10)
-# parent_proxy = DynamicProxy(parent)
+parent = ParentObject(10)
+parent_proxy = DynamicProxy(parent)
 
-# # Step 2: Add a new subobject (it will be automatically wrapped and tracked)
+# Step 2: Add a new subobject (it will be automatically wrapped and tracked)
 
-# parent_proxy.new_attr = SubObject(100)
-# print("saved:")
-# print(parent_proxy.__repr__())
-# print("")
-# print("get: ", parent_proxy.new_attr.sub_val)
-# print("loaded")
-# print(parent_proxy.__repr__())
-# parent_proxy._save()
-# print("")
-# print("saved")
-# print(parent_proxy.__repr__())
+parent_proxy.new_attr = SubObject(100)
+print("saved:")
+print(parent_proxy.__repr__())
+print("")
+print("get: ", parent_proxy.new_attr.sub_val)
+print("loaded")
+print(parent_proxy.__repr__())
+parent_proxy._save()
+print("")
+print("saved")
+print(parent_proxy.__repr__())
 
 # # Example usage
 # my_list = [1, 2, 3]
@@ -60,9 +60,3 @@ class ParentObject:
 # print(my_proxy)
 # # Saving the collection
 # my_proxy._save()  # Save the current state to disk
-
-
-from MongoDB import createNewObject, getObject
-id = createNewObject({"test": "asd"})
-print(id)
-print(getObject(id))

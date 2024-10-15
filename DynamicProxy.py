@@ -1,4 +1,4 @@
-import pickle
+from MongoDB import createNewObject, getObject, updateObject
 
 class DynamicProxy:
     _id: int  # take from qdrant
@@ -12,7 +12,7 @@ class DynamicProxy:
         :param cls: If creating a new object, this is the class of the object.
         :param args, kwargs: Arguments for the class constructor if creating a new object.
         """
-        self._id = id(self)
+        self._id = createNewObject(obj)
         self._loaded = True
         self._obj = obj  # Track if an object is passed or not
         self._type = type(obj)  # The class type for creating new instances
@@ -23,27 +23,25 @@ class DynamicProxy:
     def _load(self):
         """Loads the object from disk."""
         if not self._loaded:
-            with open(str(self._id) + '.pkl', 'rb') as f:
-                self._obj = pickle.load(f)
+            self._obj = getObject(self._id)
             self._loaded = True
 
     def _save(self):
         """Saves the object to disk."""
-        # Save subproxy objects first
-        with open(str(self._id) + '.pkl', 'wb') as f:
-            pickle.dump(self._obj, f)
+        updateObject(self._id, self._obj)
         self._loaded = False  # (Optionally) unload after saving
         self._obj = None
 
     def __getattr__(self, name):
-        self._load()  # Load the object when an attribute is accessed
+        """Loads the object when an attribute is accessed"""
+        self._load()
         return getattr(self._obj, name)
 
     def __setattr__(self, name, value):
         if name in ['_id', '_cls', '_obj', '_loaded']:
             super().__setattr__(name, value)
         else:
-            self._load()  # Load the object before setting any attributes
+            self._load()
             setattr(self._obj, name, wrapProxy(value))
             self._save()  # Automatically save after modifying
 
