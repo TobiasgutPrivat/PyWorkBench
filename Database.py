@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 from pymongo.database import Database
 from pymongo.collection import Collection
-import dill # extended pickle functionality
+import dill #type: ignore # extended pickle functionality
 
 client: MongoClient = MongoClient("mongodb://localhost:27017/")
 WorkBenchDB: Database = client["PyWorkBench"]

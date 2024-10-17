@@ -1,4 +1,4 @@
-from MongoDB import createNewObject, getObject, updateObject
+from Database import createNewObject, getObject, updateObject
 
 class DynamicProxy:
     _id: int  # take from qdrant
