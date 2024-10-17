@@ -2,20 +2,17 @@ from MongoDB import createNewObject, getObject, updateObject
 
 class DynamicProxy:
     _id: int  # take from qdrant
-    _type: type
+    # _packages: list[str] # TODO track packages needed to import when loading object
     _obj: object
     _loaded: bool
 
     def __init__(self, obj=None):
         """
         :param obj: If an existing object is passed, it will be wrapped by the proxy.
-        :param cls: If creating a new object, this is the class of the object.
-        :param args, kwargs: Arguments for the class constructor if creating a new object.
         """
         self._id = createNewObject(obj)
         self._loaded = True
-        self._obj = obj  # Track if an object is passed or not
-        self._type = type(obj)  # The class type for creating new instances
+        self._obj = obj
 
         for v in obj.__dict__:
             wrapProxy(v)
@@ -38,7 +35,7 @@ class DynamicProxy:
         return getattr(self._obj, name)
 
     def __setattr__(self, name, value):
-        if name in ['_id', '_type', '_obj', '_loaded']:
+        if name in ['_id', '_packages', '_obj', '_loaded']:
             super().__setattr__(name, value)
         else:
             self._load()
@@ -46,7 +43,7 @@ class DynamicProxy:
             self._save()  # Automatically save after modifying
 
     def __delattr__(self, name):
-        if name in ['_id', '_type', '_obj', '_loaded']:
+        if name in ['_id', '_packages', '_obj', '_loaded']:
             super().__delattr__(name)
         else:
             self._load()  # Load the object before deleting any attributes
