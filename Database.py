@@ -16,3 +16,6 @@ def updateObject(id: str, obj: object):
 def getObject(id: str) -> object:
     return dill.loads(Objects.find_one({"_id": id})["_obj"]) #type: ignore
     # pickle.loads can have issues when required packages aren't loaded
+
+def deleteObject(id: str):
+    Objects.delete_one({"_id": id})

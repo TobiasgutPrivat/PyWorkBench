@@ -75,6 +75,11 @@ class DynamicProxy:
         # Use the __dict__ to dynamically capture all attributes and their values
         attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
         return f"{self.__class__.__name__}({attrs})"
+    
+    def __del__(self):
+        print("dummy Delete") #TODO think about this
+        # should delete when used by some unknown functionality, or active delete
+        # should not be deleted when application closes
 
 def wrapProxy(value):
     """Wrap sub-objects for proxy handling."""
