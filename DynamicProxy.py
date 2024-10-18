@@ -72,7 +72,6 @@ class DynamicProxy:
         return f"<{self._obj.__class__.__name__}>{self._obj}"
 
     def __repr__(self):
-        # Use the __dict__ to dynamically capture all attributes and their values
         attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
         return f"{self.__class__.__name__}({attrs})"
     

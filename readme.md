@@ -1,3 +1,9 @@
+## Language
+Python: 
+- **Highly dynamic**, allows for general, seamless object wrapping
+- **Performance**, worse than others, but not much diffrent if flexibility is needed anyways
+- Ecosystem, a lot of libraries for **backend**, **automation** and **scientific tasks**, performance generally worse than others (1-10 times)
+
 ## DataStorage
 Mapping from objects to NoSql-Documents (Proxy) seamless data storage.
 Specific save/load -handling possible
