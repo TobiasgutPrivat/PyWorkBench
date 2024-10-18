@@ -50,7 +50,7 @@ class DynamicProxy:
             delattr(self._obj, name)
             self._save()
 
-    def __getitem__(self, key):
+    def __getitem__(self, key):#TODO potentialy unnecessary
         self._load()  # Load the object when an item is accessed
         return self._obj[key]
 
@@ -64,12 +64,13 @@ class DynamicProxy:
         del self._obj[key]
         self._save()
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs):#TODO potentialy unnecessary
         self._load()  # If the object is callable (has a __call__ method), call it
         return self._obj(*args, **kwargs)
 
-    def __str__(self):
-        return f"<{self._obj.__class__.__name__}>{self._obj}"
+    def __str__(self):#TODO potentialy unnecessary
+        self._load()
+        return self._obj.__str__()
 
     def __repr__(self):
         attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
@@ -87,14 +88,17 @@ class DynamicProxy:
         obj = self._obj
         del self
         return obj
+    
+    #TODO handle more dunders
+    # dunders which only would require loading can be ignored because, get handled by getattr if not found
 
 def wrapProxy(value):
-    """Wrap sub-objects for proxy handling."""
+    """Wrap sub-objects for proxy handling."""#TODO think about other types (range)
     if isinstance(value, (DynamicProxy,type,int,str,float,complex,bool,bytes,bytearray,type(None))):
         return value
     elif isinstance(value, (frozenset,tuple)):
         for x in value:
             wrapProxy(x)
         return value
-    else:
+    else: # list, dict, set, normal-objects, callables
         return DynamicProxy(value)
