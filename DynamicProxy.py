@@ -1,4 +1,4 @@
-from Database import createNewObject, getObject, updateObject
+from Database import createNewObject, getObject, updateObject, deleteObject
 
 class DynamicProxy:
     _id: int  # take from qdrant
@@ -76,9 +76,17 @@ class DynamicProxy:
         return f"{self.__class__.__name__}({attrs})"
     
     def __del__(self):
-        print("dummy Delete") #TODO think about this
+        # TODO think about this
+        # should not be deleted when application closes, or remove from memory
+        # TODO handle Memory deletion without DB deletion
         # should delete when used by some unknown functionality, or active delete
-        # should not be deleted when application closes
+        deleteObject(self._id) 
+        # probably good to make DB backups
+
+    def _untrack(self) -> object:
+        obj = self._obj
+        del self
+        return obj
 
 def wrapProxy(value):
     """Wrap sub-objects for proxy handling."""
