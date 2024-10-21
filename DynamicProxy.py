@@ -1,8 +1,10 @@
 from Database import createNewObject, getObject, updateObject, deleteObject
+# !!! Debugging can cause unintended loading !!!
 
 class DynamicProxy:
     _id: int  # take from qdrant
     # _packages: list[str] # TODO track packages needed to import when loading object
+    # also think about form of import, because dill references it in according scope
     _obj: object
     _loaded: bool
 
@@ -14,7 +16,7 @@ class DynamicProxy:
         self._loaded = True
         self._obj = obj
 
-        for v in obj.__dict__:
+        for v in obj.__dict__.values():
             wrapProxy(v)
 
     def _load(self):
@@ -26,8 +28,41 @@ class DynamicProxy:
     def _save(self):
         """Saves the object to disk."""
         updateObject(self._id, self._obj)
-        self._loaded = False  # (Optionally) unload after saving
+        self._unload() #(optional)
+
+    def _unload(self):
+        """Unloads the object without saving."""
+        if not self._loaded:
+            return
+        
+        def unload_if_proxy(item):
+            if isinstance(item, DynamicProxy):
+                item._unload()
+
+        # Recursively unload sub-objects
+        if isinstance(self._obj, dict):
+            for value in self._obj.values():
+                unload_if_proxy(value)
+        elif isinstance(self._obj, (list, set, tuple)):
+            for item in self._obj:
+                unload_if_proxy(item)
+        elif hasattr(self._obj, '__slots__'):
+            for slot in self._obj.__slots__:
+                value = getattr(self._obj, slot)
+                unload_if_proxy(value)
+        elif hasattr(self._obj, '__dict__'):
+            for attr_value in self._obj.__dict__.values():
+                unload_if_proxy(attr_value)
+        
         self._obj = None
+        self._loaded = False
+
+    def __getstate__(self): #always store subobjects unloaded
+        self._unload()
+        return self.__dict__.copy()
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
     def __getattr__(self, name):
         """Loads the object when an attribute is accessed"""
