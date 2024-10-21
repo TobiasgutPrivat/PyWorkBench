@@ -14,10 +14,10 @@ class DynamicProxy:
         """
         self._id = createNewObject(obj)
         self._loaded = True
+        for k, v in obj.__dict__.items():
+            obj.__dict__[k] = wrapProxy(v)
         self._obj = obj
 
-        for v in obj.__dict__.values():
-            wrapProxy(v)
 
     def _load(self):
         """Loads the object from disk."""
@@ -113,10 +113,11 @@ class DynamicProxy:
     
     def __del__(self):
         # TODO think about this
-        # should not be deleted when application closes, or remove from memory
-        # TODO handle Memory deletion without DB deletion
-        # should delete when used by some unknown functionality, or active delete
-        deleteObject(self._id) 
+        # handle when changes can be made, to avoid unwanted deletions
+        try:
+            deleteObject(self._id) 
+        except:
+            pass
         # probably good to make DB backups
 
     def _untrack(self) -> object:
