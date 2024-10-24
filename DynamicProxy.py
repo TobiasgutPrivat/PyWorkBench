@@ -1,6 +1,8 @@
 from Database import createNewObject, getObject, updateObject, deleteObject
 # !!! Debugging can cause unintended loading !!!
 
+#TODO think about how to handle referenced objects in memory
+
 class DynamicProxy:
     _id: int  # take from qdrant
     # _packages: list[str] # TODO track packages needed to import when loading object

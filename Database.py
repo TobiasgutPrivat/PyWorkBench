@@ -19,3 +19,10 @@ def getObject(id: str) -> object:
 
 def deleteObject(id: str):
     Objects.delete_one({"_id": id})
+
+def clearOrphans(RootId: str):
+    """!!!Danger!!!
+    Deletes all objects that are not reachable from the root object.
+    Use with care!"""
+    #TODO clear orphans
+    raise NotImplementedError
