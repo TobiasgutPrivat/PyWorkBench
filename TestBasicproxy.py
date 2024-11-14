@@ -39,7 +39,4 @@ class SimpleTestCase(unittest.TestCase):
         assert self.parent_proxy.value == 10
         assert self.parent_proxy.sub_obj.value == 20
 
-    # def testSubobject(self):
-    #     self.parent_proxy.new_attr = SubObject(100)
-
 unittest.main()

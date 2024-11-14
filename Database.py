@@ -7,15 +7,15 @@ client: MongoClient = MongoClient("mongodb://localhost:27017/")
 WorkBenchDB: Database = client["PyWorkBench"]
 Objects: Collection = WorkBenchDB["Objects"]
 
-def createNewObject(id: str, obj: object):
-    Objects.insert_one({"_id": id, "_obj": dill.dumps(obj)})
+def createNewObject(obj: object) -> str:
+    return Objects.insert_one({"_obj": dill.dumps(obj)}).inserted_id
 
 def updateObject(id: str, obj: object):
     Objects.update_one({"_id": id}, {"$set": {"_obj": dill.dumps(obj)}})
 
 def getObject(id: str) -> object:
     return dill.loads(Objects.find_one({"_id": id})["_obj"]) #type: ignore
-    # pickle.loads can have issues when required packages aren't loaded
+    # dill.loads can have issues when required packages aren't loaded
 
 def deleteObject(id: str):
     Objects.delete_one({"_id": id})
