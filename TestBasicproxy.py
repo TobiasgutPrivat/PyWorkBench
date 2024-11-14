@@ -16,27 +16,43 @@ class ParentObject:
         self.sub_obj = SubObject(value * 2)
     
 class SimpleTestCase(unittest.TestCase):
-    parent_proxy: DynamicProxy
-
-    def setUp(self):
-        """Call before every test case."""
+    def testBasicProxy(self):
         parent = ParentObject(10)
-        self.parent_proxy = DynamicProxy(parent)
+        parent_proxy = DynamicProxy(parent)
+        #init
+        assert parent_proxy.value == 10
+        assert parent_proxy.sub_obj.value == 20
+        assert isinstance(parent_proxy, DynamicProxy)# issue if there are type checks in general
+        assert isinstance(parent_proxy.sub_obj, DynamicProxy)
 
-    def testInit(self):
-        assert self.parent_proxy.value == 10
-        assert self.parent_proxy.sub_obj.value == 20
-        assert isinstance(self.parent_proxy, DynamicProxy)# issue if there are type checks in general
-        assert isinstance(self.parent_proxy.sub_obj, DynamicProxy)
+        #references
+        # parent_proxy.parent = parent
 
-    def testGet(self):
-        assert self.parent_proxy.value == 10
-        assert self.parent_proxy.sub_obj.value == 20
-        id = self.parent_proxy._id
-        del self.parent_proxy
-        print(isinstance(id, str))
-        self.parent_proxy = DynamicProxy(id)
-        assert self.parent_proxy.value == 10
-        assert self.parent_proxy.sub_obj.value == 20
+        #edit
+        parent_proxy.sub_obj.value = 30
+        assert parent_proxy.sub_obj.value == 30
+
+        #reload
+        id = parent_proxy._id
+        del parent_proxy
+        parent_proxy = DynamicProxy(id)
+        assert parent_proxy.value == 10
+        assert parent_proxy.sub_obj.value == 30
+
+        #delete
+        assert hasattr(parent_proxy, 'value') == True
+        delattr(parent_proxy, 'value')
+        assert hasattr(parent_proxy, 'value') == False
+
+        #new object
+        newObj = SubObject(40)
+        parent_proxy.newObj = newObj
+        assert parent_proxy.newObj.value == 40
+        assert isinstance(parent_proxy.newObj, DynamicProxy)
+
+        #list
+
+        #dict
+
 
 unittest.main()
