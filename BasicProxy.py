@@ -43,12 +43,12 @@ class DynamicProxy:
         if name in ['_id', '_obj']:
             return super().__setattr__(name, value)
         obj = getObject(self._id)
-        setattr(obj, name, value)
+        setattr(obj, name, wrapProxy(value))
         updateObject(self._id, obj)
 
     def __setitem__(self, key, value):
         obj = getObject(self._id)
-        obj[key] = value
+        obj[key] = wrapProxy(value)
         updateObject(self._id, obj)
 
     def __delattr__(self, name):
@@ -60,6 +60,9 @@ class DynamicProxy:
         obj = getObject(self._id)
         del obj[key]
         updateObject(self._id, obj)
+
+    def __str__(self) -> str:
+        return getObject(self._id).__str__()
 
 def wrapProxy(value):
     """Wrap sub-objects for proxy handling."""

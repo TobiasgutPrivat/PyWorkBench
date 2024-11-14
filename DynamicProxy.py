@@ -8,9 +8,9 @@ class DynamicProxy:
     # _packages: list[str] # TODO track packages needed to import when loading object
     # also think about form of import, because dill references it in according scope
     _obj: object
-    _loaded: bool
+    _loaded: bool #could be removed because equal to _obj != None
 
-    def __init__(self, obj=None):
+    def __init__(self, obj=None): #TODO allow create from ObjectID #TODO new created for references
         """
         :param obj: If an existing object is passed, it will be wrapped by the proxy.
         """
@@ -18,6 +18,7 @@ class DynamicProxy:
         self._loaded = True
         for k, v in obj.__dict__.items():
             obj.__dict__[k] = wrapProxy(v)
+        #TODO also wrap dict/iterable
         self._obj = obj
 
 
@@ -38,19 +39,20 @@ class DynamicProxy:
             return
         
         # Recursively unload sub-objects
-        if isinstance(self._obj, dict):
-            for value in self._obj.values():
-                unloadProxy(value)
-        elif isinstance(self._obj, (list, set, tuple)):
-            for item in self._obj:
-                unloadProxy(item)
-        elif hasattr(self._obj, '__slots__'):
-            for slot in self._obj.__slots__:
-                value = getattr(self._obj, slot)
-                unloadProxy(value)
-        elif hasattr(self._obj, '__dict__'):
-            for attr_value in self._obj.__dict__.values():
-                unloadProxy(attr_value)
+        # if isinstance(self._obj, dict):
+        #     for value in self._obj.values():
+        #         unloadProxy(value)
+        # elif isinstance(self._obj, (list, set, tuple)):
+        #     for item in self._obj:
+        #         unloadProxy(item)
+        # elif hasattr(self._obj, '__slots__'):
+        #     for slot in self._obj.__slots__:
+        #         value = getattr(self._obj, slot)
+        #         unloadProxy(value)
+        # elif hasattr(self._obj, '__dict__'):
+        #     for attr_value in self._obj.__dict__.values():
+        #         unloadProxy(attr_value)
+        # not needed because done when serialized
         
         self._obj = None
         self._loaded = False
@@ -72,7 +74,7 @@ class DynamicProxy:
             super().__setattr__(name, value)
         else:
             self._load()
-            deleteProxy(getattr(self._obj,name))
+            # deleteProxy(getattr(self._obj,name))
             setattr(self._obj, name, wrapProxy(value))
             self._save()  # Automatically save after modifying
 
@@ -81,7 +83,7 @@ class DynamicProxy:
             super().__delattr__(name)
         else:
             self._load()  # Load the object before deleting any attributes
-            deleteProxy(getattr(self._obj,name))
+            # deleteProxy(getattr(self._obj,name))
             delattr(self._obj, name)
             self._save()
 
@@ -91,13 +93,13 @@ class DynamicProxy:
 
     def __setitem__(self, key, value):
         self._load()  # Load the object before setting any item
-        deleteProxy(self._obj[key])
+        # deleteProxy(self._obj[key])
         self._obj[key] = wrapProxy(value)
         self._save()  # Automatically save after modifying
 
     def __delitem__(self, key):
         self._load()  # Load the object before deleting an item
-        deleteProxy(self._obj[key])
+        # deleteProxy(self._obj[key])
         del self._obj[key]
         self._save()
 
@@ -113,21 +115,21 @@ class DynamicProxy:
         attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
         return f"{self.__class__.__name__}({attrs})"
     
-    def _delete(self):
-        if isinstance(self._obj, dict):
-            for value in self._obj.values():
-                deleteProxy(value)
-        elif isinstance(self._obj, (list, set, tuple)):
-            for item in self._obj:
-                deleteProxy(item)
-        elif hasattr(self._obj, '__slots__'):
-            for slot in self._obj.__slots__:
-                value = getattr(self._obj, slot)
-                deleteProxy(value)
-        elif hasattr(self._obj, '__dict__'):
-            for attr_value in self._obj.__dict__.values():
-                deleteProxy(attr_value)
-        deleteObject(self._id) 
+    # def _delete(self):
+    #     if isinstance(self._obj, dict):
+    #         for value in self._obj.values():
+    #             deleteProxy(value)
+    #     elif isinstance(self._obj, (list, set, tuple)):
+    #         for item in self._obj:
+    #             deleteProxy(item)
+    #     elif hasattr(self._obj, '__slots__'):
+    #         for slot in self._obj.__slots__:
+    #             value = getattr(self._obj, slot)
+    #             deleteProxy(value)
+    #     elif hasattr(self._obj, '__dict__'):
+    #         for attr_value in self._obj.__dict__.values():
+    #             deleteProxy(attr_value)
+    #     deleteObject(self._id) 
 
     def _untrack(self) -> object:
         obj = self._obj
@@ -137,22 +139,22 @@ class DynamicProxy:
     #TODO handle more dunders
     # dunders which only would require loading can be ignored because, get handled by getattr if not found
 
-def deleteProxy(value):
-    if isinstance(value, DynamicProxy):
-        value._delete()
-    elif isinstance(value, (frozenset, tuple)):
-        for x in value:
-            deleteProxy(x)
+# def deleteProxy(value):
+#     if isinstance(value, DynamicProxy):
+#         value._delete()
+#     elif isinstance(value, (frozenset, tuple)):
+#         for x in value:
+#             deleteProxy(x)
 
-def unloadProxy(item):
-    if isinstance(item, DynamicProxy):
-        item._unload()
+# def unloadProxy(item):
+#     if isinstance(item, DynamicProxy):
+#         item._unload()
 
 def wrapProxy(value):
     """Wrap sub-objects for proxy handling."""#TODO think about other types (range)
     if isinstance(value, (DynamicProxy,type,int,str,float,complex,bool,bytes,bytearray,type(None))):
         return value
-    elif isinstance(value, (frozenset,tuple)):
+    elif isinstance(value, (frozenset,tuple)): # potentially unnecessary
         for x in value:
             wrapProxy(x)
         return value

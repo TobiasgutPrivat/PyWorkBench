@@ -50,7 +50,9 @@ class SimpleTestCase(unittest.TestCase):
         assert parent_proxy.newObj.value == 40
         assert isinstance(parent_proxy.newObj, DynamicProxy)
 
+        print(str(parent_proxy)) #TODO some Error
         #list
+
 
         #dict
 
