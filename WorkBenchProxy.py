@@ -1,4 +1,11 @@
-# Similair to DynamicProxy
+# Probably Similair to DynamicProxy
+# 
+# Alternative make class extensions like 
+# obj.__class__ = type("DynamicClass", (OriginalClass,), {"__str__": custom_str})
+# allows to not wrap it and have better intelisense 
+# requires loading/unloading attributes
+# not sure how to handle dict's, iterables, sets
+
 
 # wrapping behaviour
 # Wrap all sub-objects for proxy handling
