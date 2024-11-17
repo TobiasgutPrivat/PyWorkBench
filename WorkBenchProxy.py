@@ -10,10 +10,12 @@
 # wrapping behaviour
 # Wrap all sub-objects for proxy handling
 # not sure if include all types or just classes (__dict__)
+# maybe implement unwrapping option or toggle autowrappihg
 
 # Saving behaviour
 # Save after user actions like (create, edit, delete, call function)
 # needs to include subobjects
+# also avoids issue with methods executing after saving
 
 # Loading behaviour
 # Load when accessed
@@ -22,7 +24,8 @@
 # delete in DB when not referenced (like garbage collector)
 
 # unload behaviour
-# unload when saved / not unload
+# unload after saving (user action not in _save()) 
+# or just not unload
 # unloads subobjects via serialization handler
 
 # untrack behaviour
