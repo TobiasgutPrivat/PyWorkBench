@@ -14,8 +14,9 @@
 
 # Saving behaviour
 # Save after user actions like (create, edit, delete, call function)
-# needs to include subobjects
+# needs to save subobjects as well
 # also avoids issue with methods executing after saving
+# proxy only saves if specificly called
 
 # Loading behaviour
 # Load when accessed
@@ -37,26 +38,31 @@ from Database import createNewObject, getObject, updateObject, clearOrphans, Obj
 #TODO think about how to handle referenced objects in memory
 
 new_objects: dict[int,ObjectId] = {}
+proxy_attrs = {"_id", "_obj", "_packages"}
+
 class DynamicProxy:
     _id: int  # take from qdrant
     # _packages: list[str] # TODO track packages needed to import when loading object
     # also think about form of import, because dill references it in according scope
     _obj: object | None
 
-    def __init__(self, obj=None|ObjectId):
+    def __init__(self, obj = object | ObjectId):
         """
         :param obj: If an existing object is passed, it will be wrapped by the proxy.
         """
         if isinstance(obj, ObjectId):
             self._id = obj
-        else:
-            if id(obj) in new_objects:
-                self._id = new_objects[id(obj)]
-                return
-            self._id = createNewObject(obj)
-            new_objects[id(obj)] = self._id
-            self._WrapSubObjects()
-            self._obj = obj
+            self._obj = None
+            return
+        if id(obj) in new_objects:
+            self._id = new_objects[id(obj)]
+            self._obj = None
+            return
+        self._id = createNewObject(obj)
+        new_objects[id(obj)] = self._id
+        # self._WrapSubObjects()
+        self._obj = obj
+        #TODO check if object has some attributes with same name as DynamicProxy
 
     def _WrapSubObjects(self):
         for k, v in self._obj.__dict__.items():
@@ -71,7 +77,6 @@ class DynamicProxy:
     def _save(self):
         """Saves the object to disk."""
         updateObject(self._id, self._obj)
-        self._unload() #(optional)
 
     def _unload(self):
         """Unloads the object without saving."""
@@ -84,26 +89,19 @@ class DynamicProxy:
     def __setstate__(self, state):
         self.__dict__.update(state)
 
-    def __getattr__(self, name):
-        """Loads the object when an attribute is accessed"""
-        self._load()
-        return getattr(self._obj, name)
-
     def __setattr__(self, name, value):
-        if name in ['_id', '_packages', '_obj']:
+        if name in proxy_attrs:
             super().__setattr__(name, value)
         else:
             self._load()
             setattr(self._obj, name, wrapProxy(value))
-            self._save()  # Automatically save after modifying
 
     def __delattr__(self, name):
-        if name in ['_id', '_packages', '_obj']:
+        if name in proxy_attrs:
             super().__delattr__(name)
         else:
             self._load()  # Load the object before deleting any attributes
             delattr(self._obj, name)
-            self._save()
 
     # def __getitem__(self, key):#TODO potentialy unnecessary
     #     self._load()  # Load the object when an item is accessed
