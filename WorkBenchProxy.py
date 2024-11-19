@@ -23,6 +23,7 @@
 
 # delete behaviour
 # delete in DB when not referenced (like garbage collector)
+# alternative: allow deletion during actions
 
 # unload behaviour
 # unload after saving (user action not in _save()) 
