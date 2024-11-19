@@ -40,6 +40,13 @@ from Database import createNewObject, getObject, updateObject, clearOrphans, Obj
 new_objects: dict[int,ObjectId] = {}
 proxy_attrs = {"_id", "_obj", "_packages"}
 
+def wrapProxy(value):
+    """Wrap sub-objects for proxy handling."""#TODO think about other types (range)
+    if isinstance(value, (DynamicProxy,type,int,str,float,complex,bool,bytes,bytearray,type(None))):
+        return value
+    else: # list, dict, set, normal-objects, callables
+        return DynamicProxy(value)
+
 class DynamicProxy:
     _id: int  # take from qdrant
     # _packages: list[str] # TODO track packages needed to import when loading object
@@ -60,27 +67,60 @@ class DynamicProxy:
             return
         self._id = createNewObject(obj)
         new_objects[id(obj)] = self._id
-        # self._WrapSubObjects()
         self._obj = obj
+        self._WrapSubObjects()
         #TODO check if object has some attributes with same name as DynamicProxy
 
     def _WrapSubObjects(self):
-        for k, v in self._obj.__dict__.items():
-            self._obj.__dict__[k] = wrapProxy(v)
-        #TODO also wrap dict/iterable
+        if hasattr(self._obj, '__dict__'):
+            for k, v in self._obj.__dict__.items():
+                self._obj.__dict__[k] = wrapProxy(v)
+        if isinstance(self._obj, dict):
+            for k, v in self._obj.items():
+                self._obj[k] = wrapProxy(v)
+        if isinstance(self._obj, set):
+            self._obj = {wrapProxy(v) for v in self._obj}
+        if isinstance(self._obj, (list, tuple)):
+            for k, v in enumerate(self._obj):
+                self._obj[k] = wrapProxy(v)
 
     def _load(self):
         """Loads the object from disk."""
         if self._obj is None:
             self._obj = getObject(self._id)
 
-    def _save(self):
+    def _save(self, inheriting: bool = False):
         """Saves the object to disk."""
+        if inheriting:
+            self._saveSubProxies()
         updateObject(self._id, self._obj)
+
+    def _saveSubProxies(self):
+        for v in self._getSubProxies():
+            v._save(True)
+
+    def _getSubProxies(self):
+        if hasattr(self._obj, '__dict__'):
+            for v in self._obj.__dict__.values():
+                if isinstance(v, DynamicProxy):
+                    yield v
+        if isinstance(self._obj, dict):
+            for v in self._obj.values():
+                if isinstance(v, DynamicProxy):
+                    yield v
+        if isinstance(self._obj, (list, set, tuple)):
+            for v in self._obj:
+                if isinstance(v, DynamicProxy):
+                    yield v
 
     def _unload(self):
         """Unloads the object without saving."""
         self._obj = None
+
+    def _untrack(self) -> object:
+        obj = self._obj
+        del self
+        return obj
 
     def __getstate__(self): #always store subobjects unloaded
         self._unload()
@@ -88,6 +128,12 @@ class DynamicProxy:
 
     def __setstate__(self, state):
         self.__dict__.update(state)
+
+    def __getattr__(self, name):
+        # if name in proxy_attrs:
+        #     return super().__getattribute__(name)
+        self._load()
+        return getattr(self._obj, name)
 
     def __setattr__(self, name, value):
         if name in proxy_attrs:
@@ -100,54 +146,187 @@ class DynamicProxy:
         if name in proxy_attrs:
             super().__delattr__(name)
         else:
-            self._load()  # Load the object before deleting any attributes
+            self._load()
             delattr(self._obj, name)
 
-    # def __getitem__(self, key):#TODO potentialy unnecessary
-    #     self._load()  # Load the object when an item is accessed
-    #     return self._obj[key]
+    # dunders
 
-    # def __setitem__(self, key, value):
-    #     self._load()  # Load the object before setting any item
-    #     # deleteProxy(self._obj[key])
-    #     self._obj[key] = wrapProxy(value)
-    #     self._save()  # Automatically save after modifying
+    def __getitem__(self, key):
+        self._load()
+        return self._obj[key]
 
-    # def __delitem__(self, key):
-    #     self._load()  # Load the object before deleting an item
-    #     # deleteProxy(self._obj[key])
-    #     del self._obj[key]
-    #     self._save()
+    def __setitem__(self, key, value):
+        self._load()
+        self._obj[key] = wrapProxy(value)
 
-    # def __call__(self, *args, **kwargs):#TODO potentialy unnecessary
-    #     self._load()  # If the object is callable (has a __call__ method), call it
-    #     return self._obj(*args, **kwargs)
+    def __delitem__(self, key):
+        self._load()
+        del self._obj[key]
 
-    def __str__(self):#TODO potentialy unnecessary
+    def __contains__(self, item):
+        self._load()
+        return item in self._obj
+
+    def __call__(self, *args, **kwargs):
+        self._load()
+        return self._obj(*args, **kwargs)
+
+    def __str__(self):
         self._load()
         return self._obj.__str__()
 
     def __repr__(self):
-        attrs = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
-        return f"{self.__class__.__name__}({attrs})"
+        self._load()
+        return self._obj.__repr__()
     
-    def _untrack(self) -> object:
-        obj = self._obj
-        del self
-        return obj
+    def __len__(self):
+        self._load()
+        return self._obj.__len__()
     
+    def __iter__(self):
+        self._load()
+        return self._obj.__iter__()
+    
+    def __next__(self):
+        self._load()
+        return self._obj.__next__()
+    
+    def __bool__(self):
+        self._load()
+        return self._obj.__bool__()
+    
+    def __int__(self):
+        self._load()
+        return self._obj.__int__()
+    
+    def __float__(self):
+        self._load()
+        return self._obj.__float__()
+    
+    def __complex__(self):
+        self._load()
+        return self._obj.__complex__()
+    
+    def __bytes__(self):
+        self._load()
+        return self._obj.__bytes__()
+    
+    def __bytearray__(self):
+        self._load()
+        return self._obj.__bytearray__()
+    
+    def __index__(self):
+        self._load()
+        return self._obj.__index__()
+    
+    def __round__(self):
+        self._load()
+        return self._obj.__round__()
+    
+    def __trunc__(self):
+        self._load()
+        return self._obj.__trunc__()
+    
+    def __floor__(self):
+        self._load()
+        return self._obj.__floor__()
+    
+    def __ceil__(self):
+        self._load()
+        return self._obj.__ceil__()
+    
+    def __abs__(self):
+        self._load()
+        return self._obj.__abs__()
+    
+    def __add__(self, other):
+        self._load()
+        return self._obj + other
+    
+    def __sub__(self, other):
+        self._load()
+        return self._obj - other
+    
+    def __mul__(self, other):
+        self._load()
+        return self._obj * other
+    
+    def __matmul__(self, other):
+        self._load()
+        return self._obj @ other
+    
+    def __truediv__(self, other):
+        self._load()
+        return self._obj / other
+    
+    def __floordiv__(self, other):
+        self._load()
+        return self._obj // other
+    
+    def __mod__(self, other):
+        self._load()
+        return self._obj % other
+    
+    def __pow__(self, other):
+        self._load()
+        return self._obj ** other
+    
+    def __lshift__(self, other):
+        self._load()
+
+    def __and__(self, other):
+        self._load()
+        return self._obj & other
+        
+    def __or__(self, other):
+        self._load()
+        return self._obj | other
+        
+    def __xor__(self, other):
+        self._load()
+        return self._obj ^ other
+        
+    def __rshift__(self, other):
+        self._load()
+        return self._obj >> other
+        
+    def __lshift__(self, other):
+        self._load()
+        return self._obj << other
+        
+    def __eq__(self, other):
+        self._load()
+        return self._obj == other
+        
+    def __ne__(self, other):
+        self._load()
+        return self._obj != other
+        
+    def __lt__(self, other):
+        self._load()
+        return self._obj < other
+        
+    def __le__(self, other):
+        self._load()
+        return self._obj <= other
+        
+    def __gt__(self, other):
+        self._load()
+        return self._obj > other
+        
+    def __ge__(self, other):
+        self._load()
+        return self._obj >= other
+        
+    def __neg__(self):
+        self._load()
+        return -self._obj
+        
+    def __pos__(self):
+        self._load()
+        return +self._obj
+        
+    def __invert__(self):
+        self._load()
+        return ~self._obj
     #TODO handle more dunders
-    # dunders which only would require loading can be ignored because, get handled by getattr if not found
-
-def wrapProxy(value):
-    """Wrap sub-objects for proxy handling."""#TODO think about other types (range)
-    if isinstance(value, (DynamicProxy,type,int,str,float,complex,bool,bytes,bytearray,type(None))):
-        return value
-    elif isinstance(value, (frozenset,tuple)): # potentially unnecessary
-        for x in value:
-            wrapProxy(x)
-        return value
-    else: # list, dict, set, normal-objects, callables
-        return DynamicProxy(value)
-
-#TODO delete unused proxies
