@@ -1,63 +1,75 @@
-from Database import createNewObject, getObject, updateObject, deleteObject
+from Database import createNewObject, getObject, updateObject, clearOrphans
 # obj.__class__ = type("DynamicClass", (OriginalClass,), {"__str__": custom_str})
 # allows to not wrap it and have better intelisense 
 # requires loading/unloading attributes
 # not sure how to handle dict's, iterables, sets
+# allows dunder method access by inheritence
+# maybe also no issue with isinstance
 
 ExtendedClasses: dict[type,type] = {}
 
-def _load(self):
-    if not self._loaded:
-        self.__dict__.append(getObject(self._id))
-        self._loaded = True
+def make_dynamic_class(orgType: type) -> type:
+    """Dynamically create a class with the required methods and ensure __class__ cell is available."""
+    
+    class ExtendDynamic(orgType):
+        def _load(self):
+            if not self._loaded:
+                self._loaded = True
+                self.__dict__.update(getObject(self._id))
 
-def _save(self):
-    updateObject(self._id, {key: value for key, value in self.__dict__.items() 
-                    if key not in ["_id", "_loaded"]})
-    self._unload()
+        def _save(self):
+            updateObject(self._id, self.getData())
+            self._unload()
 
-def _unload(self):
-    if self._loaded:
-        self.__dict__ = {"_id": self._id, "_loaded": False}
+        def getData(self):
+            return {key: value for key, value in self.__dict__.items()
+                if key not in ["_id", "_loaded"]}
 
-def _getattr(self, name):
-    self._load()
-    return super().__getattribute__(self, name)
+        def _unload(self):
+            if self._loaded:
+                self.__dict__ = {"_id": self._id} if hasattr(self, "_id") else {}
+                self._loaded = False
 
-def _setattr(self, name, value):
-    self._load()
-    return super().__setattr__(self, name, value)
+        def __getattr__(self, name):
+            self._load()
+            return super().__getattribute__(name)
 
-def _getstate(self):
-    self._unload()
-    return self.__dict__.copy()
+        def __setattr__(self, name, value):
+            if name not in ["_id", "_loaded"]:
+                self._load()
+            super().__setattr__(name, value)
 
-def _setstate(self, state):
-    self.__dict__.update(state)
+        def __getstate__(self):
+            self._unload()
+            return self.__dict__.copy()
 
-dunders: dict[str, function] = {
-    "_load": _load,
-    "_unload": _unload,
-    "_save": _save,
-    "__getstate__": _getstate,
-    "__setstate__": _setstate,
-    "__getattr__": _getattr,
-}
+        def __setstate__(self, state):
+            self.__dict__.update(state)
+    
+    # Return the dynamically created class
+    return ExtendDynamic
 
 def wrapProxy(value: object) -> None:
-    if isinstance(value, (type,int,str,float,complex,bool,bytes,bytearray,type(None))):
+    if isinstance(value, (type, int, str, float, complex, bool, bytes, bytearray, type(None))):
         return
     if value.__class__ in ExtendedClasses.values():
         return
     if value.__class__ in ExtendedClasses:
         value.__class__ = ExtendedClasses[value.__class__]
         return
+
     orgType: type = value.__class__
-    value.__class__ = type(
-        "Extend" + orgType.__name__, 
-        (orgType,), 
-        dunders
-    )
-    ExtendedClasses[orgType] = value.__class__
+
+    # Dynamically create the extended class
+    extended_class = make_dynamic_class(orgType)
+    
+    # Cache the extended class
+    ExtendedClasses[orgType] = extended_class
+    
+    # Assign the extended class to the object
+    value.__class__ = extended_class
+
+    # Initialize custom attributes
     value._loaded = True
-    value._id = createNewObject(value)
+    value._id = createNewObject(value.getData())
+
