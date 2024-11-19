@@ -78,9 +78,11 @@ class DynamicProxy:
         if isinstance(self._obj, dict):
             for k, v in self._obj.items():
                 self._obj[k] = wrapProxy(v)
-        if isinstance(self._obj, set):
+        if isinstance(self._obj, (set, frozenset)):
             self._obj = {wrapProxy(v) for v in self._obj}
-        if isinstance(self._obj, (list, tuple)):
+        if isinstance(self._obj, tuple):
+            self._obj = tuple(wrapProxy(v) for v in self._obj)
+        if isinstance(self._obj, (list)):
             for k, v in enumerate(self._obj):
                 self._obj[k] = wrapProxy(v)
 

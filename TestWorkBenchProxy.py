@@ -78,5 +78,11 @@ class SimpleTestCase(unittest.TestCase):
         parent_proxy.someset.update(other_set.union(parent_proxy.someset))
 
         #tuple
+        parent_proxy.sometuple = (1,2,3)
+        assert parent_proxy.sometuple[0] == 1
+        parent_proxy.sometuple = (4,5,6)
+        assert parent_proxy.sometuple[0] == 4
+
+        #callables
 
 unittest.main()
