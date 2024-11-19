@@ -18,15 +18,13 @@ class ParentObject:
 class SimpleTestCase(unittest.TestCase):
     def testBasicProxy(self):
         parent = ParentObject(10)
+        parent.reference = parent
         parent_proxy = DynamicProxy(parent)
         #init
         assert parent_proxy.value == 10
         assert parent_proxy.sub_obj.value == 20
         assert isinstance(parent_proxy, DynamicProxy)# issue if there are type checks in general
-        # assert isinstance(parent_proxy.sub_obj, DynamicProxy)
-
-        #references
-        # parent_proxy.parent = parent
+        assert isinstance(parent_proxy.sub_obj, DynamicProxy)
 
         #edit
         parent_proxy.sub_obj.value = 30
@@ -34,7 +32,7 @@ class SimpleTestCase(unittest.TestCase):
 
         #reload
         id = parent_proxy._id
-        parent_proxy._save(True)
+        parent_proxy._save()
         del parent_proxy
         parent_proxy = DynamicProxy(id)
         assert parent_proxy.value == 10
@@ -44,6 +42,7 @@ class SimpleTestCase(unittest.TestCase):
         assert hasattr(parent_proxy, 'value') == True
         delattr(parent_proxy, 'value')
         assert hasattr(parent_proxy, 'value') == False
+        parent_proxy.value = 10
 
         #new object
         newObj = SubObject(40)
@@ -51,7 +50,7 @@ class SimpleTestCase(unittest.TestCase):
         assert parent_proxy.newObj.value == 40
         assert isinstance(parent_proxy.newObj, DynamicProxy)
 
-        # print(str(parent_proxy)) #TODO some Error due to attribute access of dataclass
+        print(str(parent_proxy)) #TODO some Error due to attribute access of dataclass
         #list
         parent_proxy.somelist = [1,2,3]
         assert parent_proxy.somelist[0] == 1

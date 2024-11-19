@@ -91,7 +91,7 @@ class DynamicProxy:
         if self._obj is None:
             self._obj = getObject(self._id)
 
-    def _save(self, inheriting: bool = False):
+    def _save(self, inheriting: bool = True):
         """Saves the object to disk."""
         if inheriting:
             self._saveSubProxies()
