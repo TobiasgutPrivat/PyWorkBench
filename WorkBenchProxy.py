@@ -213,9 +213,9 @@ class DynamicProxy:
         self._load()
         return self._obj.__bytes__()
     
-    def __bytearray__(self):
+    def __hash__(self):
         self._load()
-        return self._obj.__bytearray__()
+        return self._obj.__hash__()
     
     def __index__(self):
         self._load()
@@ -331,4 +331,141 @@ class DynamicProxy:
     def __invert__(self):
         self._load()
         return ~self._obj
+    
+    def __missing__(self, key):
+        self._load()
+        return self._obj.__missing__(key)
+    
+    def __length_hint__(self):
+        self._load()
+        return self._obj.__length_hint__()
+    
+    def __radd__(self, other):
+        self._load()
+        return other + self._obj
+    
+    def __rmul__(self, other):
+        self._load()
+        return other * self._obj
+    
+    def __rmatmul__(self, other):
+        self._load()
+        return other @ self._obj
+    
+    def __rfloordiv__(self, other):
+        self._load()
+        return other // self._obj
+    
+    def __rmod__(self, other):
+        self._load()
+        return other % self._obj
+    
+    def __rpow__(self, other):
+        self._load()
+        return other ** self._obj
+    
+    def __rlshift__(self, other):
+        self._load()
+        return other << self._obj
+    
+    def __rrshift__(self, other):
+        self._load()
+        return other >> self._obj
+    
+    def __rand__(self, other):
+        self._load()
+        return other & self._obj
+    
+    def __ror__(self, other):
+        self._load()
+        return other | self._obj
+    
+    def __rxor__(self, other):
+        self._load()
+        return other ^ self._obj
+    
+    def __iadd__(self, other):
+        self._load()
+        self._obj += other
+
+    def __isub__(self, other):
+        self._load()
+        self._obj -= other
+
+    def __imul__(self, other):
+        self._load()
+        self._obj *= other
+
+    def __imatmul__(self, other):
+        self._load()
+        self._obj @= other
+
+    def __ifloordiv__(self, other):
+        self._load()
+        self._obj //= other
+
+    def __imod__(self, other):    
+        self._load()
+        self._obj %= other
+
+    def __ipow__(self, other):    
+        self._load()
+        self._obj **= other
+
+    def __ilshift__(self, other):    
+        self._load()
+        self._obj <<= other
+
+    def __irshift__(self, other):    
+        self._load()
+        self._obj >>= other
+
+    def __iand__(self, other):    
+        self._load()
+        self._obj &= other
+
+    def __ior__(self, other):    
+        self._load()
+        self._obj |= other
+
+    def __ixor__(self, other):    
+        self._load()
+        self._obj ^= other
+
+    # def __enter__(self):
+    #     self._load()
+    #     return self._obj
+
+    # def __exit__(self, exc_type, exc_val, exc_tb):
+    #     self._unload()
+    #     clearOrphans()
+
+    def __dir__(self):
+        self._load()
+        return self._obj.__dir__()
+    
+    def __prepare__(self):
+        self._load()
+        return self._obj.__prepare__()
+    
+    def __instancecheck__(self):
+        self._load()
+        return self._obj.__instancecheck__()
+    
+    def __subclasscheck__(self):
+        self._load()
+        return self._obj.__subclasscheck__()
+    
+    def __init_subclass__(self):
+        self._load()
+        return self._obj.__init_subclass__()
+    
+    def __class_getitem__(self):
+        self._load()
+        return self._obj.__class_getitem__()
+    
+    def __set_name__(self, name):
+        self._load()
+        return self._obj.__set_name__(name)
+    
     #TODO handle more dunders
