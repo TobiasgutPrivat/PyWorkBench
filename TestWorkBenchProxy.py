@@ -83,5 +83,7 @@ class SimpleTestCase(unittest.TestCase):
         assert parent_proxy.sometuple[0] == 4
 
         #callables
+        parent_proxy.callable = lambda x: x + 1
+        assert parent_proxy.callable(1) == 2
 
 unittest.main()
