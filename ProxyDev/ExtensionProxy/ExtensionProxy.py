@@ -7,6 +7,9 @@ import importlib
 # allows dunder method access by inheritence
 # maybe also no issue with isinstance
 
+# i don't think that i can handle data apart from __dict__
+# actually possible (example list: list(self), self.clear(), self.extend(dbdata) )
+
 def load_class(qualified_name: str) -> type:
     module_name, class_name = qualified_name.rsplit(".", 1)
     module = importlib.import_module(module_name)
@@ -81,35 +84,38 @@ def loadId(id: ObjectId) -> object:
     obj._id = id
     return obj
 
-def wrapProxy(value: object, recursive: bool = True) -> object:
-    if isinstance(value, (type, int, str, float, complex, bool, bytes, bytearray, type(None))):
-        return value
-    
+def wrapProxy(obj: object, recursive: bool = True) -> object:
     if recursive:
-        value = wrapSubObjects(value) 
+        wrapSubObjects(obj) 
 
-    if value.__class__ in ExtendedClasses.values():
-        return value
-    if value.__class__ in ExtendedClasses:
-        value.__class__ = ExtendedClasses[value.__class__]
-        return value
-    extended_class = make_dynamic_class(value.__class__)
+    #TODO probably need to exit for objects without __dict__
+    #TODO maybe change proxy to only use loaded if __dict__ is allowed, but still extend it
+    # if not hasattr(obj, '__dict__'):
+    #     return obj
+
+    if obj.__class__ in ExtendedClasses.values():
+        return obj
+    if obj.__class__ in ExtendedClasses:
+        obj.__class__ = ExtendedClasses[obj.__class__]
+        return obj
+    extended_class = make_dynamic_class(obj.__class__)
     
-    ExtendedClasses[value.__class__] = extended_class
-    value.__class__ = extended_class
-    value._loaded = True
-    value._id = createNewObject(value._getData())
+    ExtendedClasses[obj.__class__] = extended_class
+    obj.__class__ = extended_class
+    obj._loaded = True
+    obj._id = createNewObject(obj._getData())
 
-    return value
+    return obj
 
 def wrapSubObjects(obj: object) -> object:
+    if isinstance(obj, (type, int, str, float, complex, bool, bytes, bytearray, type(None))):
+        return
     if hasattr(obj, '__dict__'):
         for k, v in obj.__dict__.items():
             obj.__dict__[k] = wrapProxy(v)
-    if isinstance(obj, list):
-        return [wrapProxy(item) for item in obj]
     elif isinstance(obj, dict):
-        return {key: wrapProxy(val) for key, val in obj.items()}
-    elif isinstance(obj, set):
-        return {wrapProxy(item) for item in obj}
-    return obj
+        for val in obj.values():
+            wrapProxy(val)
+    elif isinstance(obj, (set,tuple,list)):
+        for item in obj:
+            wrapProxy(item)
