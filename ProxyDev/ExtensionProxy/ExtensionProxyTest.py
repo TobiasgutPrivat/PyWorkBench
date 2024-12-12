@@ -22,7 +22,7 @@ class SimpleTestCase(unittest.TestCase):
         #init
         assert parent.value == 10
         assert parent.sub_obj.value == 20
-        assert isinstance(parent, ParentObject)# issue if there are type checks in general
+        assert isinstance(parent, ParentObject)# solved issue with type checks
         assert isinstance(parent.sub_obj, SubObject)
 
         #references
@@ -48,6 +48,7 @@ class SimpleTestCase(unittest.TestCase):
         newObj = SubObject(40)
         parent.newObj = newObj
         assert parent.newObj.value == 40
+        assert isinstance(parent.newObj, SubObject)
 
         # print(str(parent_proxy)) #TODO some Error due to attribute access of dataclass
         #list
